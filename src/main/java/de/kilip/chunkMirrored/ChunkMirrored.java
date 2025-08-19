@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.InventoryBlockStartEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -347,11 +348,21 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
             mirrored.setPitch(playerLoc.getPitch());
 
             Entity e = info.npc.getEntity();
+            Player p = (Player) e;
+            if(p!=null) {
+                p.getInventory().setHelmet(player.getInventory().getHelmet());
+                p.getInventory().setChestplate(player.getInventory().getChestplate());
+                p.getInventory().setLeggings(player.getInventory().getLeggings());
+                p.getInventory().setBoots(player.getInventory().getBoots());
+                p.getInventory().setItemInMainHand(player.getInventory().getItemInMainHand());
+                p.getInventory().setItemInOffHand(player.getInventory().getItemInOffHand());
+            }
+
+
             if (info.npc.isSpawned()) {
                 World world = mirrored.getWorld();
                 int chunkX = mirrored.getBlockX() >> 4;
                 int chunkZ = mirrored.getBlockZ() >> 4;
-
                 // Asynchronously load chunk, then teleport NPC
                 world.getChunkAtAsync(chunkX, chunkZ).thenAccept(chunk -> {
                     Bukkit.getScheduler().runTask(this, () -> {
