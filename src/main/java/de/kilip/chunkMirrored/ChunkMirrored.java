@@ -1,6 +1,7 @@
 package de.kilip.chunkMirrored;
 
 import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.util.Pose;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -344,7 +345,6 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
             Location mirrored = playerLoc.clone().add(offsetX, 0, offsetZ);
             mirrored.setYaw(playerLoc.getYaw());
             mirrored.setPitch(playerLoc.getPitch());
-
 
             Entity e = info.npc.getEntity();
             if (info.npc.isSpawned()) {

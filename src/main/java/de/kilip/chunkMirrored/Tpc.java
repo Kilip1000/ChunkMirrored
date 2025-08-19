@@ -36,9 +36,9 @@ public class Tpc implements CommandExecutor {
         int chunkX = targetPlayer.getChunk().getX() * 16;
         int chunkZ = targetPlayer.getChunk().getZ() * 16;
 
-        Location targetLoc = new Location(targetPlayer.getWorld(), chunkX+relX, player.getY(), chunkZ+relZ);
-        player.teleport(targetLoc);
+        Location targetLoc = new Location(targetPlayer.getWorld(), chunkX+relX, player.getY(), chunkZ+relZ, player.getYaw(), player.getPitch());
 
+        player.teleport(targetLoc);
         player.sendMessage("Teleported to " + targetPlayer.getName() + "'s chunk.");
         return true;
     }
