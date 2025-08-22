@@ -51,6 +51,8 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("tpc").setExecutor(new Tpc());
+
+
         getLogger().info("ChunkMirrorPlugin enabled!");
 
         maskFile = new File(getDataFolder(), "changedBlocks.yml");
@@ -207,7 +209,7 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
         player.sendMessage("Initialising copies, don't worry, this might take 20-30 seconds");
         spawnFullMirrorGrid(player);
         player.sendMessage("You may now move");
-        boolean visible = player.getGameMode() != org.bukkit.GameMode.SPECTATOR;
+        boolean visible = player.getGameMode() != GameMode.SPECTATOR;
 
         // Hide/show all NPCs for this player
         var mirrors = this.playerMirrors.get(player.getUniqueId());
@@ -248,7 +250,7 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
     @EventHandler
     public void onGameModeChange(PlayerGameModeChangeEvent event) {
         Player player = event.getPlayer();
-        boolean visible = event.getNewGameMode() != org.bukkit.GameMode.SPECTATOR;
+        boolean visible = event.getNewGameMode() != GameMode.SPECTATOR;
 
         // Hide/show all NPCs for this player
         var mirrors = this.playerMirrors.get(player.getUniqueId());
