@@ -4,6 +4,8 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.util.Pose;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,9 +13,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.InventoryBlockStartEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -199,6 +199,66 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
         queueBlockUpdate(event.getBlock(), Bukkit.createBlockData(Material.AIR));
     }
 
+
+    @EventHandler
+    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        BlockFace dir = event.getDirection();
+        List<Block> blocks = new ArrayList<>(event.getBlocks());
+        event.setCancelled(true);
+
+
+        // Process from farthest → nearest (avoid overwriting)
+        blocks.sort(Comparator.comparingDouble(
+                b -> -b.getLocation().distanceSquared(event.getBlock().getLocation()))
+        );
+
+        // Collect updates
+        List<Map.Entry<Block, BlockData>> updates = new ArrayList<>();
+        for (Block block : blocks) {
+            // Place the moved block in the target location
+            updates.add(Map.entry(block.getRelative(dir), block.getBlockData()));
+
+            // Clear the old spot if it becomes air
+            if (block.getRelative(dir.getOppositeFace()).getType().isAir()) {
+                updates.add(Map.entry(block, Bukkit.createBlockData(Material.AIR)));
+            }
+        }
+
+        // Queue in order
+        for (var entry : updates) {
+            queueBlockUpdate(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @EventHandler
+    public void onBlockPistonRetract(BlockPistonRetractEvent event) {
+        if (!event.isSticky()) return;
+        event.setCancelled(true);
+        BlockFace dir = event.getDirection();
+        List<Block> blocks = new ArrayList<>(event.getBlocks());
+
+        // Process farthest → nearest to avoid collisions
+        blocks.sort(Comparator.comparingDouble(
+                b -> b.getLocation().distanceSquared(event.getBlock().getLocation()))
+        );
+
+        List<Map.Entry<Block, BlockData>> updates = new ArrayList<>();
+        for (Block block : blocks) {
+            Block target = block.getRelative(dir.getOppositeFace());
+
+            // Move block toward piston
+            updates.add(Map.entry(target, block.getBlockData()));
+
+            // Clear old spot
+            updates.add(Map.entry(block, Bukkit.createBlockData(Material.AIR)));
+        }
+
+        // Queue in order
+        for (var entry : updates) {
+            queueBlockUpdate(entry.getKey(), entry.getValue());
+        }
+    }
+
     // --------------------------
     // Player + NPC system
     // --------------------------
@@ -228,8 +288,8 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
             }
         }
 
-
     }
+
     private void lockNPCsForPlayer(Player player) {
         List<NPCInfo> mirrors = playerMirrors.get(player.getUniqueId());
         if (mirrors == null) return;
@@ -301,28 +361,32 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
 
                 Location npcLoc = player.getLocation().clone().add(offsetX, 0, offsetZ);
 
-                NPC npc = NPCUtils.spawnNPC(npcLoc, player.getName());
-                NPCUtils.setSkin(npc, player.getName());
-                npc.spawn(npcLoc);
+                World world = npcLoc.getWorld();
+                int chunkX = npcLoc.getBlockX() >> 4;
+                int chunkZ = npcLoc.getBlockZ() >> 4;
 
-                if (npc.isSpawned()) {
-                    Entity entity = npc.getEntity();
-                    if (entity != null) {
-                        entity.setGravity(false);
-                        entity.setNoPhysics(true);
-                    }
-                    else{
-                        getLogger().warning("NPC is unable to be spawned");
-                    }
-                }
+                world.getChunkAtAsync(chunkX, chunkZ).thenAccept(chunk -> {
+                    Bukkit.getScheduler().runTask(this, () -> {
+                        NPC npc = NPCUtils.spawnNPC(npcLoc, player.getName());
+                        NPCUtils.setSkin(npc, player.getName());
+                        npc.spawn(npcLoc);
 
+                        if (npc.isSpawned() && npc.getEntity() != null) {
+                            Entity entity = npc.getEntity();
+                            entity.setGravity(false);
+                            entity.setNoPhysics(true);
+                        } else {
+                            getLogger().warning("NPC failed to spawn at " + npcLoc);
+                        }
 
-                mirrors.add(new NPCInfo(npc, offsetX, offsetZ));
+                        mirrors.add(new NPCInfo(npc, offsetX, offsetZ));
+                        playerMirrors.put(player.getUniqueId(), mirrors);
+                    });
+                });
             }
         }
-
-        playerMirrors.put(player.getUniqueId(), mirrors);
     }
+
 
     private void updateNPCsForPlayer(Player player) {
         List<NPCInfo> mirrors = playerMirrors.get(player.getUniqueId());

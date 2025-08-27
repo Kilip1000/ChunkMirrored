@@ -67,15 +67,18 @@ public class Tpc implements CommandExecutor {
         // Send messages
         if (sender.equals(player1) && !sender.equals(player2)) {
             sender.sendMessage("Teleported to " + player2.getName() + "'s chunk.");
+            return true;
         }
-        else if (sender.equals(player2) && !sender.equals(player1)) {
+        if (sender.equals(player2) && !sender.equals(player1)) {
             sender.sendMessage(player1.getName() + " has been teleported to your chunk.");
-        } else if (!sender.equals(player1) && !sender.equals(player2)) {
+            return true;
+        }
+        if (!sender.equals(player1) && !sender.equals(player2)) {
             sender.sendMessage("Teleported " + player1.getName() + " to " + player2.getName() + "'s chunk.");
             player1.sendMessage("You have been teleported to " + player2.getName() + "'s chunk.");
-        } else {
-            sender.sendMessage("Teleported " + player1.getName() + " to " + player2.getName() + "'s chunk.");
+            return true;
         }
+        sender.sendMessage("Teleported " + player1.getName() + " to " + player2.getName() + "'s chunk.");
 
         return true;
     }
