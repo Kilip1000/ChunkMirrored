@@ -33,4 +33,4 @@ This creates a "looping world" effect, where each player sees a copy of themselv
 ## Usage
 - On join, players will see NPC copies of themselves in a full mirrored grid.  
 - Place/break blocks → updates will be mirrored across the world.  
-- Command:
+- Command: /tpc, which teleports the user to the chunk of a fellow player.
