@@ -1,6 +1,6 @@
 # ChunkMirrored
 
-A Paper Minecraft plugin that **mirrors player movement and block changes across surrounding chunks** using Citizens NPCs.  
+A Paper Minecraft plugin that **mirrors player movement and block changes across surrounding chunks.**
 This creates a "looping world" effect, where each player sees a copy of themselves in a grid of mirrored NPCs.
 
 ---
@@ -12,15 +12,13 @@ This creates a "looping world" effect, where each player sees a copy of themselv
   - Changes persist across server restarts (`changedBlocks.yml`).
 - **Torus Wrapping**: NPCs move in a wrapped grid around the player (infinite tiling illusion).
 - **Gamemode Support**:  
-  - Spectators: NPCs are hidden.  
-  - Creative/Spectator: NPC Y-position is locked to prevent drifting.
+  - Spectators: NPCs are also transferred to Spectator-mode.  
 - **Automatic Saving**: Block masks are stored on shutdown and reapplied when chunks load.
 
 ---
 
 ## Requirements
 - **Minecraft Server**: Spigot or Paper (1.21.8 recommended).
-- **[Citizens 2](https://github.com/CitizensDev/Citizens2)** plugin (for NPC support).
 - Java 21
 
 ---
@@ -28,8 +26,7 @@ This creates a "looping world" effect, where each player sees a copy of themselv
 ## Installation
 1. Download or build the plugin JAR.
 2. Place it in your server’s `plugins/` folder.
-3. Ensure **Citizens** is also installed.
-4. Start/restart your server.
+3Start/restart your server.
 
 ---
 
