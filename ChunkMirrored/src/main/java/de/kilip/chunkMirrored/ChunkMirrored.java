@@ -16,25 +16,58 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BlockVector;
 
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ClientInformation;
+import net.minecraft.server.level.ParticleStatus;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.entity.Player;
+import net.minecraft.network.protocol.game.*;
 
 import java.util.*;
+import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
+
+import java.util.EnumSet;
+
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.Relative;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.world.entity.EquipmentSlot;
+import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
 
 public class ChunkMirrored extends JavaPlugin implements Listener {
 
     private static class NPCInfo {
-        public final NPC npc;
+        public final ServerPlayer npc;
         public double offsetX, offsetZ;
         public Location lastPlayerLoc = null;
 
-        public NPCInfo(NPC npc, double offsetX, double offsetZ) {
+        public NPCInfo(ServerPlayer npc, double offsetX, double offsetZ) {
             this.npc = npc;
             this.offsetX = offsetX;
             this.offsetZ = offsetZ;
@@ -57,6 +90,7 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
 
         loadMask();
 
+        // Process BlockUpdates
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -67,6 +101,7 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
             }
         }.runTaskTimer(this, 0L, 1L);
 
+        // Process NPCUpdates
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -101,7 +136,9 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
         }
 
     }
-
+    // --------------------------
+    // Block masking
+    // --------------------------
 
     private void loadMask() {
         maskFile = new File(getDataFolder(), "changedBlocks.yml");
@@ -202,6 +239,9 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
         }
     }
 
+    // --------------------------
+    // Player + NPC system
+    // --------------------------
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -221,13 +261,13 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
                 double offsetZ = dz * 16;
 
                 Location npcLoc = player.getLocation().clone().add(offsetX, 0, offsetZ);
-                NPC npc = npcHandler.createServerPlayerNPC(
+                ServerPlayer npc = npcHandler.createServerPlayerNPC(
                         player.getName(),
                         npcLoc.getX(), npcLoc.getY(), npcLoc.getZ(),
                         npcLoc.getYaw(), npcLoc.getPitch()
                 );
 
-                //npc.setSkin(player);
+                npcHandler.queueSkinUpdate(npc, player);
                 npcHandler.setHelmet(npc, player.getInventory().getHelmet());
                 npcHandler.setChest(npc, player.getInventory().getChestplate());
                 npcHandler.setLegs(npc, player.getInventory().getLeggings());
@@ -278,7 +318,7 @@ public class ChunkMirrored extends JavaPlugin implements Listener {
             npcHandler.setFeet(info.npc, player.getInventory().getBoots());
             npcHandler.setMainhand(info.npc, player.getInventory().getItemInMainHand());
             npcHandler.setOffhand(info.npc, player.getInventory().getItemInOffHand());
-            //    info.npc.setSkin(player);
+            npcHandler.queueSkinUpdate(info.npc, player);
 
             info.lastPlayerLoc = playerLoc.clone();
         }

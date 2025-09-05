@@ -1,7 +1,11 @@
-de\kilip\chunkMirrored\AdminTpc.class
 de\kilip\chunkMirrored\NPCUtils.class
+de\kilip\chunkMirrored\NPC.class
 de\kilip\chunkMirrored\ChunkMirrored$2.class
 de\kilip\chunkMirrored\ChunkMirrored$1.class
 de\kilip\chunkMirrored\ChunkMirrored$NPCInfo.class
+de\kilip\chunkMirrored\NPCHandler$1.class
+de\kilip\chunkMirrored\NPCHandler.class
 de\kilip\chunkMirrored\ChunkMirrored.class
+de\kilip\chunkMirrored\SkinUtils.class
+de\kilip\chunkMirrored\DummyConnection.class
 de\kilip\chunkMirrored\Tpc.class

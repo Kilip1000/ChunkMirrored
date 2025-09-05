@@ -2,7 +2,6 @@ name: ChunkMirrored
 version: '1.0-SNAPSHOT'
 main: de.kilip.chunkMirrored.ChunkMirrored
 api-version: '1.21'
-depend: [Citizens]
 commands:
   tpc:
     description: Teleports you to the Chunk of another player
